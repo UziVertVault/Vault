@@ -1,0 +1,26 @@
+:root{ --vault-primary:#ff2e93; --vault-bg:#020208; --vault-card:rgba(255,255,255,0.04); --vault-radius:16px; --vault-font:Inter, system-ui, sans-serif; }
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.15) transparent;box-sizing:border-box}
+body{font-family:var(--vault-font); letter-spacing:-0.01em; background:var(--vault-bg); transition: background 0.3s, font-family 0.2s}
+.card{border-radius:var(--vault-radius) !important}
+.bg-\[\#ff2e93\]{background:var(--vault-primary) !important}
+.text-\[\#ff2e93\]{color:var(--vault-primary) !important}
+.border-\[\#ff2e93\]{border-color:var(--vault-primary) !important}
+.from-\[\#ff2e93\]{--tw-gradient-from:var(--vault-primary) !important}
+.to-\[\#a855f7\]{--tw-gradient-to:color-mix(in srgb, var(--vault-primary) 60%, #a855f7) !important}
+.nav{padding:7px 16px; border-radius:999px; font-size:13px; font-weight:500; background:transparent; border:1px solid transparent; color:rgba(255,255,255,0.55); transition:all 0.15s; display:inline-flex; align-items:center; gap:6px}
+.nav:hover{background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.9); border-color:rgba(255,255,255,0.06)}
+.nav.active{background:white; color:black; border-color:white; font-weight:700; box-shadow:0 1px 8px rgba(0,0,0,0.2); opacity:1}
+.row{width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:12px; font-size:13px; text-align:left; font-weight:500; transition:all 0.15s}
+.row:hover{background:rgba(255,255,255,0.06); transform:translateX(2px)}
+.filter-btn{padding:7px 14px; border-radius:999px; font-size:12px; font-weight:600; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:rgba(255,255,255,0.6); backdrop-filter:blur(8px); transition:all 0.2s}
+.filter-btn:hover{background:rgba(255,255,255,0.08); color:white; border-color:rgba(255,255,255,0.14)}
+.filter-btn.active{background:white; color:black; border-color:white; box-shadow:0 2px 12px rgba(255,255,255,0.15); font-weight:700}
+.view{animation:fade 0.22s cubic-bezier(0.2,0,0,1)}
+@keyframes fade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)}}
+.card{border-radius:16px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); overflow:hidden; transition:all 0.2s cubic-bezier(0.2,0,0,1); backdrop-filter:blur(12px)}
+.card:hover{border-color:rgba(255,255,255,0.14); transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.3)}
+button{cursor:pointer}
+button:active{transform:scale(0.98)}
+/* tabs block pills */
+.tabs-bar button{transition:all 0.15s}
+.tabs-bar button:hover{transform:translateY(-1px)}

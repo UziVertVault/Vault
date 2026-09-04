@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vault — Dark</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-[#020208] text-white antialiased h-screen flex flex-col overflow-hidden">
+<div class="fixed inset-0 -z-10 bg-cover bg-center" style="background-image:url('assets/bg.jpg'); filter:saturate(0.95) brightness(0.52)"></div>
+<div class="fixed inset-0 -z-10 bg-[#020208]/75"></div>
+
+<header class="h-[56px] flex items-center justify-between px-3 border-b border-white/10 bg-black/40 backdrop-blur-xl shrink-0 gap-2">
+  <div class="flex items-center gap-2">
+    <div class="w-8 h-8 rounded-lg bg-white text-black grid place-items-center font-black text-xs">V</div>
+    <nav class="hidden md:flex items-center gap-1 p-1 rounded-full bg-white/[0.03] border border-white/[0.06]">
+      <button onclick="navigate('home')" data-nav="home" class="nav active">Home</button>
+      <button onclick="navigate('vault')" data-nav="vault" class="nav">Vault</button>
+      <button onclick="navigate('radio')" data-nav="radio" class="nav">Radio</button>
+      <button onclick="navigate('albums')" data-nav="albums" class="nav">Albums</button>
+      <button onclick="navigate('charts')" data-nav="charts" class="nav">Charts</button>
+      <button onclick="navigate('profile')" data-nav="profile" class="nav">Profile</button>
+      <button onclick="navigate('shop')" data-nav="shop" class="nav">Shop</button>
+      <button onclick="openAdmin()" data-nav="admin" id="adminNavBtn" class="nav hidden">Admin</button>
+    </nav>
+  </div>
+  <div class="flex items-center gap-2 flex-1 justify-end max-w-[520px]">
+    <div class="flex-1 relative hidden sm:block">
+      <input id="searchInput" oninput="onSearch(this.value)" placeholder="Search vault — title, era, ID" class="w-full h-8 rounded-full bg-white/5 border border-white/10 pl-8 pr-3 text-xs placeholder:text-white/30">
+      <span class="absolute left-3 top-1.5 text-white/30 text-xs">⌕</span>
+    </div>
+    <button onclick="navigate('history')" data-nav="history" class="hidden sm:flex items-center gap-1 h-8 px-3 rounded-full bg-white/10 border border-white/10 text-xs hover:bg-white/15" title="History — separate from Radio">◷ History</button>
+    <span class="hidden sm:flex items-center gap-1 text-[11px] font-mono text-emerald-300 border border-emerald-400/20 bg-emerald-400/10 rounded-full px-2 py-1"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> LIVE</span>
+    <button onclick="openAuth('register')" class="h-8 px-4 rounded-full bg-[#ff2e93] text-white text-xs font-bold hover:bg-[#ff4da6]">Sign up</button>
+    <button onclick="openAuth()" id="authBtn" class="h-8 px-4 rounded-full bg-white text-black text-xs font-bold">Log in</button>
+  </div>
+</header>
+
+<div class="flex flex-1 min-h-0">
+  <aside class="w-[260px] hidden lg:flex flex-col bg-black/30 backdrop-blur-xl border-r border-white/10 p-3 gap-4 overflow-y-auto shrink-0">
+    <div class="rounded-2xl bg-gradient-to-br from-[#ff2e93]/15 to-[#a855f7]/10 border border-white/10 p-3">
+      <p class="text-[11px] font-mono text-[#ff7ab8]">NOW PLAYING</p>
+      <div class="flex items-center gap-3 mt-2">
+        <img id="sideArt" src="https://picsum.photos/100/100" class="w-12 h-12 rounded-xl object-cover">
+        <div class="min-w-0">
+          <p id="sideTitle" class="text-sm font-bold truncate">No track</p>
+          <p id="sideSub" class="text-xs opacity-50 truncate">Add music</p>
+        </div>
+      </div>
+      <div class="mt-3 grid grid-cols-2 gap-2">
+        <button onclick="navigate('radio')" class="h-8 rounded-full bg-[#ff2e93] text-white text-xs font-bold">• Radio</button>
+        <button onclick="shuffleAll()" class="h-8 rounded-full bg-white/10 text-xs">Shuffle</button>
+      </div>
+    </div>
+    <nav class="space-y-1">
+      <button onclick="filterLiked()" class="row"><span>♥</span> Liked <span id="likedCount" class="ml-auto text-xs bg-white/10 px-2 rounded-full">0</span></button>
+      <button onclick="toggleQueue()" class="row"><span>≡</span> Queue <span id="queueCount" class="ml-auto text-xs opacity-40">0</span></button>
+      <button onclick="navigate('vault')" class="row"><span>◈</span> Vault</button>
+      <button onclick="navigate('albums')" class="row"><span>▭</span> Albums</button>
+      <button onclick="navigate('charts')" class="row"><span>▤</span> Charts</button>
+      <button onclick="navigate('history')" data-nav="history" class="row"><span>◷</span> History</button>
+      <button onclick="navigate('shop')" data-nav="shop" class="row"><span>🛒</span> Shop</button>
+      <button onclick="navigate('profile')" class="row"><span>◉</span> Profile</button>
+    </nav>
+    <div class="rounded-xl bg-white/5 border border-white/10 p-3">
+      <p class="text-[11px] font-mono opacity-40">PLAYLISTS</p>
+      <div id="playlistsList" class="mt-2 space-y-1"></div>
+      <div class="flex gap-1 mt-2">
+        <input id="newPlaylistName" placeholder="New playlist" class="flex-1 h-7 rounded-full bg-black/30 border border-white/10 px-3 text-xs">
+        <button onclick="createPlaylist()" class="w-7 h-7 rounded-full bg-white text-black grid place-items-center text-xs">+</button>
+      </div>
+    </div>
+    <div>
+      <p class="text-[11px] font-mono opacity-40">FILTER</p>
+      <div class="mt-2 grid grid-cols-2 gap-1">
+        <button onclick="setFilter('all')" data-filter="all" class="filter-btn active">All</button>
+        <button onclick="setFilter('grail')" data-filter="grail" class="filter-btn">Grails</button>
+        <button onclick="setFilter('og')" data-filter="og" class="filter-btn">OG</button>
+        <button onclick="setFilter('snippet')" data-filter="snippet" class="filter-btn">Snippets</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="flex-1 overflow-y-auto pb-24">
+    <section id="view-home" class="view">
+      <div class="p-6 md:p-10 text-center">
+        <h1 class="text-4xl md:text-5xl font-black tracking-tighter" style="font-family:Syne,sans-serif">Uzi Vault</h1>
+        <div class="mt-6 flex gap-2 justify-center">
+          <button onclick="navigate('vault')" class="px-5 py-2 rounded-full bg-white text-black text-sm font-bold">Open Vault →</button>
+          <button onclick="shuffleAll()" class="px-5 py-2 rounded-full bg-[#ff2e93] text-white text-sm font-bold">Shuffle All</button>
+        </div>
+      </div>
+      <div id="latestGrid" class="hidden"></div>
+    </section>
+
+    <section id="view-vault" class="view hidden">
+      <div class="p-4 md:p-6">
+        <div class="relative">
+          <span class="absolute left-3 top-2.5 text-white/30">⌕</span>
+          <input id="vaultSearch" oninput="vaultSearch(this.value)" placeholder="Search albums, songs — like Spotify" class="w-full h-10 rounded-full bg-[#121212] border border-white/10 pl-9 pr-4 text-sm placeholder:text-white/30">
+        </div>
+        <div class="mt-4 rounded-2xl bg-[#121212] border border-white/10 p-4 flex flex-col md:flex-row gap-3 items-center">
+          <div class="flex-1">
+            <h3 class="font-bold text-sm flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-[#1DB954] text-black grid place-items-center text-xs">+</span> Create Playlist</h3>
+            <p class="text-xs opacity-50">Like Spotify — filters current songs</p>
+          </div>
+          <div class="flex gap-2 w-full md:w-auto">
+            <input id="vaultPlaylistName" placeholder="My Playlist" class="flex-1 md:w-[200px] h-10 rounded-full bg-black border border-white/10 px-4 text-sm">
+            <button onclick="vaultCreatePlaylist()" class="h-10 px-5 rounded-full bg-[#1DB954] text-black text-sm font-bold">Create</button>
+          </div>
+        </div>
+        <div id="vaultPlaylistsPreview" class="mt-2"></div>
+        <h3 class="font-bold mt-6">Albums <span id="vaultAlbumsCount" class="text-xs opacity-40"></span></h3>
+        <div id="vaultAlbums" class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2"></div>
+        <h3 class="font-bold mt-6">Songs</h3>
+        <div id="vaultGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2"></div>
+        <div class="mt-6 rounded-2xl bg-[#121212] border border-white/10 p-4 flex items-center gap-3">
+          <img id="vaultPlayerArt" src="https://picsum.photos/100/100" class="w-12 h-12 rounded-lg object-cover">
+          <div class="flex-1 min-w-0">
+            <p id="vaultPlayerTitle" class="text-sm font-bold truncate">Not playing</p>
+            <p id="vaultPlayerSub" class="text-xs opacity-50 truncate">Pick a song</p>
+            <div class="h-1 bg-white/10 rounded-full mt-2"><div id="vaultPlayerBar" class="h-1 bg-[#1DB954] rounded-full" style="width:0%"></div></div>
+          </div>
+          <button onclick="prevTrack()" class="w-8 h-8 rounded-full bg-white/10 grid place-items-center">⏮</button>
+          <button onclick="togglePlay()" class="w-10 h-10 rounded-full bg-[#1DB954] text-black grid place-items-center font-black">▶</button>
+          <button onclick="nextTrack()" class="w-8 h-8 rounded-full bg-white/10 grid place-items-center">⏭</button>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4 mt-6">
+          <div class="rounded-2xl bg-[#121212] border border-white/10 p-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-sm">Your Recently Played</h3>
+              <button onclick="navigate('history')" class="text-xs px-3 py-1 rounded-full bg-white/10 hover:bg-white/15">History →</button>
+            </div>
+            <div id="vaultRecent" class="mt-3 space-y-1"></div>
+          </div>
+          <div class="rounded-2xl bg-[#121212] border border-white/10 p-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-sm">Radio's Recently Played</h3>
+              <button onclick="navigate('radio')" class="text-xs px-3 py-1 rounded-full bg-[#ff2e93] text-white">Radio →</button>
+            </div>
+            <div id="vaultRadioRecent" class="mt-3 space-y-1"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-radio" class="view hidden p-6">
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
+        <p class="text-xs font-mono bg-[#ff2e93] text-white px-3 py-1 rounded-full inline-flex">● Radio</p>
+        <h2 id="radioTitle" class="text-2xl font-black mt-2">Radio</h2>
+        <p id="radioSub" class="opacity-60 text-sm">Continuous shuffle — live chat</p>
+        <div class="mt-4 flex gap-2 justify-center">
+          <button onclick="startRadio()" id="startRadioBtn" class="px-5 py-2 rounded-full bg-white text-black text-sm font-bold hidden">Start Radio</button>
+          <button onclick="nextTrack()" id="radioNextBtn2" class="px-4 py-2 rounded-full bg-white/10 text-sm hidden">Next →</button>
+          <span id="radioOwnerOnlyMsg" class="text-xs opacity-40 hidden">Radio — owner only</span>
+        </div>
+        <p id="radioGateMsg" class="text-xs opacity-40 mt-2 hidden">Only owners can start Radio — log in as owner to enable</p>
+      </div>
+      <div class="mt-6 grid lg:grid-cols-5 gap-4">
+        <div class="lg:col-span-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold text-sm">Queue</h3>
+            <span class="text-xs opacity-40" id="radioQueueCount">0 tracks</span>
+          </div>
+          <div id="radioQueue" class="mt-3 space-y-1 max-h-[320px] overflow-auto"></div>
+          <div class="mt-3 flex gap-2">
+            <input id="radioQueueAddInput" placeholder="Add to queue — track ID" class="flex-1 h-8 rounded-full bg-black border border-white/10 px-3 text-xs">
+            <button onclick="radioAddToQueue()" class="h-8 px-4 rounded-full bg-[#1DB954] text-black text-xs font-bold">+ Queue</button>
+          </div>
+        </div>
+        <div class="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col h-[380px]">
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold text-sm flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live Chat</h3>
+            <span class="text-xs opacity-40">Radio</span>
+          </div>
+          <div id="chatMessages" class="flex-1 overflow-auto mt-3 space-y-2 p-2 bg-black/20 rounded-xl border border-white/5"></div>
+          <div class="mt-3 flex gap-2">
+            <input id="chatInput" onkeydown="if(event.key==='Enter') sendChat()" placeholder="Send as Guest — live" class="flex-1 h-8 rounded-full bg-black border border-white/10 px-3 text-xs">
+            <button onclick="sendChat()" class="h-8 w-8 rounded-full bg-white text-black grid place-items-center font-bold">↑</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-albums" class="view hidden p-6">
+      <h2 class="text-xl font-black">Albums</h2>
+      <div id="albumsGrid" class="grid grid-cols-2 gap-3 mt-4"></div>
+    </section>
+
+    <section id="view-charts" class="view hidden p-6">
+      <h2 class="text-xl font-black">Charts</h2>
+      <p class="opacity-60 text-sm">Local most-played</p>
+      <div id="chartsList" class="mt-4 space-y-1"></div>
+    </section>
+
+    <section id="view-history" class="view hidden p-6">
+      <h2 class="text-xl font-black">History</h2>
+      <div id="historyList" class="mt-4 space-y-1"></div>
+      <button onclick="clearHistory()" class="mt-3 h-8 px-4 rounded-full bg-white/10 text-xs">Clear History</button>
+      <div class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+        <h3 class="font-bold text-sm flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Live Chat — History</h3>
+        <div id="historyChatMessages" class="mt-3 h-[200px] overflow-auto rounded-xl bg-black/30 border border-white/10 p-3 space-y-2"></div>
+        <div class="mt-2 flex gap-2">
+          <input id="historyChatInput" onkeydown="if(event.key==='Enter') sendHistoryChat()" placeholder="Send as Guest — live" class="flex-1 h-8 rounded-full bg-black/30 border border-white/10 px-3 text-xs placeholder:text-white/30">
+          <button onclick="sendHistoryChat()" class="h-8 px-4 rounded-full bg-white text-black text-xs font-bold">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-profile" class="view hidden p-6">
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
+        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#ff2e93] to-[#a855f7] mx-auto grid place-items-center text-xl font-black">G</div>
+        <h2 id="profileName" class="font-black text-xl mt-3">Guest</h2>
+        <p id="profileBio" class="opacity-60 text-sm">Click Log in to save</p>
+        <div class="mt-4 flex gap-2 justify-center">
+          <button onclick="openAuth()" class="px-4 py-2 rounded-full bg-white text-black text-sm font-bold">Log in</button>
+          <button onclick="openProfileEdit()" class="px-4 py-2 rounded-full bg-white/10 text-sm">Edit</button>
+        </div>
+      </div>
+      <div id="profileStats" class="grid grid-cols-3 gap-3 mt-4 text-center">
+        <div class="rounded-xl bg-white/5 border border-white/10 p-3"><p id="profileStatLiked" class="text-xl font-black">0</p><p class="text-xs opacity-50">Liked</p></div>
+        <div class="rounded-xl bg-white/5 border border-white/10 p-3"><p id="profileStatQueue" class="text-xl font-black">0</p><p class="text-xs opacity-50">Queue</p></div>
+        <div class="rounded-xl bg-white/5 border border-white/10 p-3"><p id="profileStatPlays" class="text-xl font-black">0</p><p class="text-xs opacity-50">Plays</p></div>
+      </div>
+    </section>
+
+    <section id="view-admin" class="view hidden p-6">
+      <h2 class="text-xl font-black">Admin</h2>
+      <div id="adminGate" class="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/10 p-6 text-center">
+        <p class="font-bold">Owner access required</p>
+        <p class="text-sm opacity-60">Log in with owner account</p>
+        <button onclick="openAuth()" class="mt-3 px-4 py-2 rounded-full bg-white text-black text-sm font-bold">Log in</button>
+      </div>
+      <div id="adminContent" class="hidden mt-4 space-y-4">
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="rounded-xl bg-white/5 border border-white/10 p-3 text-center"><p id="adminStatTracks" class="text-xl font-black">0</p><p class="text-[11px] font-mono opacity-50">TRACKS</p></div>
+          <div class="rounded-xl bg-white/5 border border-white/10 p-3 text-center"><p id="adminStatPending" class="text-xl font-black text-amber-300">0</p><p class="text-[11px] font-mono opacity-50">PENDING</p></div>
+          <div class="rounded-xl bg-white/5 border border-white/10 p-3 text-center"><p id="adminStatUsers" class="text-xl font-black">0</p><p class="text-[11px] font-mono opacity-50">USERS</p></div>
+          <div class="rounded-xl bg-white/5 border border-white/10 p-3 text-center"><p id="adminStatPlays" class="text-xl font-black">0</p><p class="text-[11px] font-mono opacity-50">PLAYS</p></div>
+        </div>
+
+        <!-- Admin Tabs -->
+        <div class="flex gap-1 p-1 rounded-full bg-white/5 border border-white/10 w-fit flex-wrap">
+          <button onclick="switchAdminTab('tracks')" id="admTab-tracks" class="h-7 px-4 rounded-full bg-white text-black text-xs font-bold">Tracks</button>
+          <button onclick="switchAdminTab('appearance')" id="admTab-appearance" class="h-7 px-4 rounded-full text-white/60 text-xs">Appearance</button>
+          <button onclick="switchAdminTab('users')" id="admTab-users" class="h-7 px-4 rounded-full text-white/60 text-xs">Users</button>
+          <button onclick="switchAdminTab('moderation')" id="admTab-moderation" class="h-7 px-4 rounded-full text-white/60 text-xs">Moderation</button>
+          <button onclick="switchAdminTab('shop')" id="admTab-shop" class="h-7 px-4 rounded-full text-white/60 text-xs">Shop</button>
+        </div>
+
+        <!-- Tracks Panel -->
+        <div id="admPanel-tracks" class="space-y-3">
+          <div class="rounded-xl bg-white/5 border border-white/10 p-4">
+            <h3 class="font-bold text-sm flex items-center gap-2">Add Track <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#ff2e93] text-white">OWNER</span></h3>
+            <div class="grid md:grid-cols-2 gap-2 mt-3">
+              <input id="admTitle" placeholder="Title — e.g. XO Tour (Demo)" class="h-8 rounded-full bg-black/30 border border-white/10 px-3 text-xs">
+              <input id="admId" placeholder="ID — UV-001" class="h-8 rounded-full bg-black/30 border border-white/10 px-3 text-xs">
+              <select id="admEra" class="h-8 rounded-full bg-black/30 border border-white/10 px-3 text-xs"><option>Luv Is Rage</option><option>Eternal Atake</option><option>Pink Tape</option><option>Loose Files</option></select>
+              <input id="admYear" placeholder="Year" class="h-8 rounded-full bg-black/30 border border-white/10 px-3 text-xs">
+              <select id="admType" class="h-8 rounded-full bg-black/30 border border-white/10 px-3 text-xs"><option value="unreleased">unreleased</option><option value="released">released</option><option value="snippet">snippet</option><option value="grail">grail</option></select>
+              <input id="admDuration" placeholder="Duration 3:22" class="h-8 rounded-full bg-black/30 border border-white/10 px-3 text-xs">
+              <input id="admCover" placeholder="Cover URL https://..." class="h-8 rounded-full bg-black/30 border border-white/10 px-3 text-xs md:col-span-2">
+              <input id="admSrc" placeholder="Audio URL or drop file" class="h-8 rounded-full bg-black/30 border border-white/10 px-3 text-xs md:col-span-2">
+            </div>
+            <div class="flex gap-2 mt-3">
+              <button onclick="adminAddTrack()" class="flex-1 h-8 rounded-full bg-[#ff2e93] text-white text-xs font-bold">Add Track</button>
+              <button onclick="adminExport()" class="h-8 px-4 rounded-full bg-white/10 border border-white/10 text-xs">Export</button>
+              <label class="h-8 px-4 rounded-full bg-white/10 border border-white/10 text-xs grid place-items-center cursor-pointer">Import JSON <input type="file" id="adminImport" accept=".json" class="hidden" onchange="adminImport(event)"></label>
+            </div>
+            <div class="mt-4 rounded-xl border border-amber-300/20 bg-amber-300/5 p-3">
+              <p class="text-xs font-bold">Add Whole Album — One Click</p>
+              <p class="text-[11px] opacity-60">Pick a folder → folder name = album title, image = cover, song names kept, owner adds artist</p>
+              <div class="flex gap-2 mt-2">
+                <label class="flex-1 h-8 rounded-full bg-amber-300 text-black text-xs font-bold grid place-items-center cursor-pointer">Choose Folder <input type="file" id="simpleAlbumFolder" webkitdirectory directory multiple accept="audio/*,image/*" class="hidden"></label>
+                <input id="simpleAlbumArtist" placeholder="Artist — Lil Uzi Vert" class="flex-1 h-8 rounded-full bg-black/30 border border-white/10 px-3 text-xs">
+              </div>
+              <div id="simpleAlbumPreview" class="mt-2 hidden text-xs p-2 rounded-xl bg-black/20 border border-white/5"></div>
+              <button onclick="simpleAlbumPublish()" class="mt-2 w-full h-8 rounded-full bg-amber-300 text-black text-xs font-bold">Publish Album</button>
+            </div>
+            <p id="adminMsg" class="text-xs font-mono mt-2 hidden"></p>
+          </div>
+          <div class="rounded-xl bg-white/5 border border-white/10 p-3">
+            <div class="flex gap-2">
+              <input id="adminSearch" oninput="renderAdminTracks()" placeholder="Search tracks — title, ID, era" class="flex-1 h-8 rounded-full bg-black/30 border border-white/10 px-3 text-xs">
+              <select id="adminSort" onchange="renderAdminTracks()" class="h-8 rounded-full bg-black/30 border border-white/10 px-3 text-xs"><option value="newest">Newest</option><option value="az">A-Z</option></select>
+            </div>
+            <div id="adminTrackList" class="mt-3 space-y-1 max-h-[320px] overflow-auto"></div>
+          </div>
+        </div>
+
+        <!-- Appearance Panel -->
+        <div id="admPanel-appearance" class="hidden space-y-3">
+          <div class="rounded-xl bg-white/5 border border-white/10 p-4">
+            <h3 class="font-bold text-sm">Customize — Live Preview</h3>
+            <p class="text-xs opacity-50">Change how the vault looks — updates instantly, saved locally</p>
+            <div class="grid md:grid-cols-3 gap-3 mt-3">
+              <label class="text-xs">Primary<input id="customPrimary" type="color" value="#ff2e93" oninput="customizeVault()" class="w-full h-8 rounded-lg"></label>
+              <label class="text-xs">Background<input id="customBg" type="color" value="#020208" oninput="customizeVault()" class="w-full h-8 rounded-lg"></label>
+              <label class="text-xs">Card Radius<input id="customRadius" type="range" min="8" max="28" value="16" oninput="customizeVault()" class="w-full"><span id="radiusVal2" class="text-[11px] opacity-40">16px</span></label>
+            </div>
+            <div class="grid md:grid-cols-2 gap-3 mt-3">
+              <label class="text-xs">Font
+                <select id="customFont" onchange="customizeVault()" class="w-full h-8 rounded-full bg-black/30 border border-white/10 px-2 text-xs">
+                  <option value="Inter">Inter</option><option value="Syne">Syne</option><option value="Space Grotesk">Space Grotesk</option><option value="JetBrains Mono">Mono</option>
+                </select>
+              </label>
+              <label class="text-xs">Density
+                <select id="customDensity" onchange="customizeVault()" class="w-full h-8 rounded-full bg-black/30 border border-white/10 px-2 text-xs">
+                  <option value="comfy">Comfy</option><option value="compact">Compact</option><option value="spacious">Spacious</option>
+                </select>
+              </label>
+            </div>
+            <div class="flex gap-2 mt-3">
+              <button onclick="resetCustom()" class="flex-1 h-7 rounded-full bg-white/10 text-xs">Reset</button>
+              <button onclick="saveCustom()" class="flex-1 h-7 rounded-full bg-white text-black text-xs font-bold">Save</button>
+            </div>
+          </div>
+          <div class="rounded-xl bg-white/5 border border-white/10 p-4">
+            <h3 class="font-bold text-sm">Site Images</h3>
+            <div class="grid md:grid-cols-2 gap-2 mt-2">
+              <label class="text-xs">Global BG<input type="file" id="siteBgFile" accept="image/*" class="w-full text-xs mt-1"></label>
+              <label class="text-xs">Default Cover<input type="file" id="defaultCoverFile" accept="image/*" class="w-full text-xs mt-1"></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Users Panel -->
+        <div id="admPanel-users" class="hidden">
+          <div class="rounded-xl bg-white/5 border border-white/10 p-4">
+            <h3 class="font-bold text-sm">Users</h3>
+            <div id="adminUserList" class="mt-3 space-y-1 max-h-[300px] overflow-auto"></div>
+          </div>
+        </div>
+
+        <!-- Moderation Panel -->
+        <div id="admPanel-moderation" class="hidden space-y-3">
+          <div class="rounded-xl bg-white/5 border border-white/10 p-4">
+            <h3 class="font-bold text-sm">Moderation</h3>
+            <div class="grid grid-cols-3 gap-2 mt-3">
+              <button onclick="adminClearChat()" class="h-8 rounded-full bg-red-500/20 text-red-300 text-xs">Clear Chat</button>
+              <button onclick="adminClearHistory()" class="h-8 rounded-full bg-amber-500/20 text-amber-300 text-xs">Clear History</button>
+              <button onclick="adminBroadcast()" class="h-8 rounded-full bg-[#ff2e93] text-white text-xs">Broadcast</button>
+            </div>
+          </div>
+          <div class="rounded-xl bg-white/5 border border-white/10 p-4">
+            <h3 class="font-bold text-sm">Pending Suggestions <span id="suggCount" class="ml-2 text-xs bg-amber-300 text-black px-2 rounded-full">0</span></h3>
+            <div id="suggestionsList" class="mt-3 space-y-1 max-h-[280px] overflow-auto"></div>
+          </div>
+        </div>
+
+        <div id="admPanel-shop" class="hidden space-y-3">
+          <div class="rounded-xl bg-white/5 border border-white/10 p-4">
+            <h3 class="font-bold text-sm">PFP Shop — Admin Upload <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#ff2e93] text-white">OWNER</span></h3>
+            <p class="text-xs opacity-50">Upload custom PFPS, users can buy/equip. Premade ones below are always available.</p>
+            <div class="flex gap-2 mt-3">
+              <input type="file" id="shopUpload" accept="image/*" class="flex-1 text-xs">
+              <input id="shopPrice" type="number" placeholder="Price (coins)" value="100" class="w-24 h-8 rounded-full bg-black/30 border border-white/10 px-3 text-xs">
+              <button onclick="adminAddShopPfp()" class="h-8 px-4 rounded-full bg-[#ff2e93] text-white text-xs font-bold">Upload</button>
+            </div>
+            <div id="shopAdminList" class="mt-4 grid grid-cols-4 gap-2"></div>
+          </div>
+          <div class="rounded-xl bg-white/5 border border-white/10 p-4">
+            <h3 class="font-bold text-sm">Premade PFPS</h3>
+            <div id="shopPremadeAdmin" class="mt-3 grid grid-cols-4 gap-2"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-shop" class="view hidden p-6">
+      <h2 class="text-xl font-black">Shop — PFPS</h2>
+      <p class="opacity-60 text-sm">Buy PFPS with coins (earn by playing). Equip to show on profile.</p>
+      <div class="mt-4 flex items-center gap-2">
+        <span class="text-xs font-mono bg-white/10 px-3 py-1 rounded-full">Coins: <span id="shopCoins">0</span></span>
+        <button onclick="shopAddCoins(100)" class="h-7 px-3 rounded-full bg-white/10 text-xs">+100 (demo)</button>
+      </div>
+      <h3 class="font-bold mt-6">Available PFPS</h3>
+      <div id="shopGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3"></div>
+      <h3 class="font-bold mt-6">Your Collection</h3>
+      <div id="shopOwned" class="grid grid-cols-4 gap-2 mt-2"></div>
+    </section>
+  </main>
+</div>
+
+<footer class="h-[72px] flex items-center gap-3 px-3 border-t border-white/10 bg-black/60 backdrop-blur-xl shrink-0">
+  <img id="playerArt" src="https://picsum.photos/100/100" class="w-10 h-10 rounded-lg object-cover">
+  <div class="flex-1 min-w-0">
+    <p id="playerTitle" class="text-sm font-bold truncate">No track</p>
+    <p id="playerSub" class="text-xs opacity-50 truncate">Pick a song</p>
+    <div class="flex items-center gap-2 mt-1">
+      <span id="cur" class="text-[11px] font-mono opacity-50">0:00</span>
+      <div class="flex-1 h-1 bg-white/10 rounded-full relative cursor-pointer" onclick="seek(event)"><div id="bar" class="absolute inset-y-0 left-0 bg-white rounded-full" style="width:0%"></div></div>
+      <span id="dur" class="text-[11px] font-mono opacity-50">0:00</span>
+    </div>
+  </div>
+  <button onclick="prevTrack()" class="w-8 h-8 rounded-full bg-white/10 grid place-items-center">⏮</button>
+  <button onclick="togglePlay()" id="playBtn" class="w-10 h-10 rounded-full bg-white text-black grid place-items-center">▶</button>
+  <button onclick="nextTrack()" class="w-8 h-8 rounded-full bg-white/10 grid place-items-center">⏭</button>
+  <input id="vol" type="range" min="0" max="100" value="80" oninput="setVol(this.value)" class="hidden md:block w-20">
+  <audio id="audio" preload="metadata"></audio>
+</footer>
+
+<div id="queueDrawer" class="fixed inset-0 hidden z-40"><div class="absolute inset-0 bg-black/60" onclick="toggleQueue()"></div><div class="absolute right-0 top-0 h-full w-[340px] bg-[#0a0a0a] border-l border-white/10 p-4 overflow-auto"><div class="flex justify-between"><h3 class="font-bold">Queue</h3><button onclick="toggleQueue()" class="w-8 h-8 rounded-full bg-white/10 grid place-items-center">✕</button></div><div id="queueList" class="mt-4 space-y-1"></div></div></div>
+<div id="authModal" class="fixed inset-0 hidden z-50"><div class="absolute inset-0 bg-black/60 backdrop-blur" onclick="closeAuth()"></div><div class="absolute inset-0 grid place-items-center p-4"><div class="w-full max-w-[400px] rounded-2xl bg-[#0a0a0a] border border-white/10 overflow-hidden">
+  <div class="p-6 pb-4">
+    <div class="flex justify-between items-start">
+      <div><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ff2e93] to-[#a855f7] grid place-items-center font-black text-xs">V</div><h3 class="font-black text-xl mt-3">Welcome to Vault</h3><p class="text-xs opacity-50">Local auth — works on GitHub Pages</p></div>
+      <button onclick="closeAuth()" class="w-8 h-8 rounded-full bg-white/10 grid place-items-center">✕</button>
+    </div>
+    <div class="flex gap-2 justify-center mt-5 text-xs font-mono">
+      <button onclick="switchAuthTab('login')" id="tab-login" class="px-3 py-1 rounded-full bg-white text-black font-bold">login</button>
+      <span class="opacity-20">|</span>
+      <button onclick="switchAuthTab('register')" id="tab-register" class="px-3 py-1 rounded-full bg-white/10">create</button>
+      <span class="opacity-20">|</span>
+      <button onclick="switchAuthTab('guest')" id="tab-guest" class="px-3 py-1 rounded-full bg-white/10">guest</button>
+    </div>
+  </div>
+  <div id="auth-login" class="px-6 pb-6">
+    <input id="loginUser" placeholder="Email" class="w-full h-9 rounded-full bg-white/5 border border-white/10 px-3 text-sm">
+    <input id="loginPass" type="password" placeholder="Password" class="mt-2 w-full h-9 rounded-full bg-white/5 border border-white/10 px-3 text-sm">
+    <button onclick="handleLogin()" class="mt-3 w-full h-9 rounded-full bg-white text-black font-bold">Log in</button>
+    <p id="loginMsg" class="text-xs text-[#ff7ab8] mt-2 hidden"></p>
+  </div>
+  <div id="auth-register" class="px-6 pb-6 hidden">
+    <input id="regUser" placeholder="Email" class="w-full h-9 rounded-full bg-white/5 border border-white/10 px-3 text-sm">
+    <input id="regPass" type="password" placeholder="Choose password" class="mt-2 w-full h-9 rounded-full bg-white/5 border border-white/10 px-3 text-sm">
+    <button onclick="handleRegister()" class="mt-3 w-full h-9 rounded-full bg-[#ff2e93] text-white font-bold">Create account</button>
+    <p id="regMsg" class="text-xs text-[#ff7ab8] mt-2 hidden"></p>
+  </div>
+  <div id="auth-guest" class="px-6 pb-6 hidden">
+    <div class="rounded-xl bg-white/5 border border-white/10 p-4">
+      <p class="text-sm font-bold">Continue as Guest</p>
+      <p class="text-xs opacity-50">Browse vault, radio, queue & charts. Likes saved locally.</p>
+    </div>
+    <button onclick="guestLogin()" class="mt-3 w-full h-9 rounded-full bg-white/10 border border-white/10 text-sm font-bold">Continue as Guest</button>
+  </div>
+</div></div></div>
+
+<script src="app.js"></script>
+</body>
+</html>
